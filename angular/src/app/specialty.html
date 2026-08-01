@@ -1,0 +1,58 @@
+<div class="app">
+  <h1>リポジトリ登録 <span class="tag">型付きリアクティブフォーム</span></h1>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="card" novalidate>
+    <div class="card-head">
+      <label class="card-name" for="fullName">リポジトリ名 (owner/repo)</label>
+    </div>
+    <input id="fullName" class="search" type="text" formControlName="fullName" placeholder="例: vitejs/vite" />
+    @if (form.controls.fullName.touched || form.controls.fullName.dirty) {
+      @if (form.controls.fullName.hasError('required')) {
+        <p class="card-desc sp-error">必須です</p>
+      } @else if (form.controls.fullName.hasError('pattern')) {
+        <p class="card-desc sp-error">owner/repo の形式で入力してください (スラッシュが必要です)</p>
+      }
+    }
+
+    <div class="card-head">
+      <label class="card-name" for="stars">スター数</label>
+    </div>
+    <input id="stars" class="search" type="number" formControlName="stars" />
+    @if (form.controls.stars.hasError('min')) {
+      <p class="card-desc sp-error">0 以上で入力してください</p>
+    }
+
+    <div class="card-head">
+      <label class="card-name" for="language">言語</label>
+    </div>
+    <select id="language" class="search" formControlName="language">
+      @for (l of languages; track l) {
+        <option [value]="l">{{ l }}</option>
+      }
+    </select>
+
+    <div class="card-foot">
+      <span class="summary">form.valid = {{ form.valid }}</span>
+      <button type="submit" class="fav" [class.on]="form.valid" [disabled]="form.invalid">登録</button>
+    </div>
+  </form>
+
+  <p class="summary">登録済み: {{ registered().length }} 件</p>
+  <div class="list">
+    @for (r of registered(); track r.fullName) {
+      <div class="card">
+        <div class="card-head">
+          <span class="card-name">{{ r.fullName }}</span>
+          <span class="card-stars">★ {{ r.stars.toLocaleString('en-US') }}</span>
+        </div>
+        <div class="card-foot"><span class="tag">{{ r.language }}</span></div>
+      </div>
+    }
+  </div>
+</div>
+
+<style>
+  .sp-error {
+    color: #f85149;
+  }
+</style>

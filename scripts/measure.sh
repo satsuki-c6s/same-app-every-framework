@@ -2,7 +2,7 @@
 # 共通デモの測定。手順を固定するためのスクリプトで、**1実装につき1回だけ**実行し、
 # 出力を RESULTS.md に転記する (やり直さない)。
 #
-#   bash scripts/measure.sh vite [port]
+#   bash scripts/measure.sh <dir> [port] [devScript]   (devScript 既定: dev。Angular は start)
 #
 # 測るもの:
 #   install  : 依存の取得時間 (クリーンな状態から)
@@ -13,6 +13,7 @@
 set -eu
 dir="$1"
 port="${2:-5173}"
+dev_script="${3:-dev}"
 cd "$(dirname "$0")/../$dir"
 
 echo "== $dir  $(date +%F)  node $(node --version)"
@@ -30,7 +31,7 @@ t3=$(date +%s%3N)
 echo "build: $((t3 - t2)) ms"
 
 total=0
-for f in dist/assets/*.js; do
+for f in $(find dist -name "*.js" -not -name "*.map" | sort); do
   s=$(gzip -c "$f" | wc -c)
   echo "js: $(basename "$f")  ${s} B (gzip)"
   total=$((total + s))
@@ -40,7 +41,7 @@ echo "js-total-gzip: ${total} B"
 # dev サーバ: 起動コマンドを打ってから HTTP 200 が返るまでの壁時計。
 # ツール自身が出す "ready in" は使わない (自己申告を測定値にしない)
 t4=$(date +%s%3N)
-npm run dev -- --port "$port" --strictPort > .dev.log 2>&1 &
+if [ "$dev_script" = "dev" ]; then npm run dev -- --port "$port" --strictPort > .dev.log 2>&1 & else npm run "$dev_script" -- --port "$port" > .dev.log 2>&1 & fi
 npm_pid=$!
 ok=0
 for _ in $(seq 1 300); do
