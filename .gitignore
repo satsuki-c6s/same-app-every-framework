@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.omc/
+.dev.log
+.env*
+!.env.example
+*.db
+*.sqlite*
+*.pem
+*.key
+credentials*
