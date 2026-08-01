@@ -16,7 +16,8 @@ interface Registered {
 }
 
 @Component({
-  selector: 'app-specialty',
+  // index.html のホスト要素 (<app-root>) に合わせる。1ロードで起動するのは片方だけ
+  selector: 'app-root',
   imports: [ReactiveFormsModule],
   templateUrl: './specialty.html',
 })
