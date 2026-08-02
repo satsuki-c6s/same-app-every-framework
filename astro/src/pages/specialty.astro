@@ -1,0 +1,50 @@
+---
+/**
+ * 特徴デモ: コンテンツコレクション (Astro が公式に掲げる売り)。
+ *
+ * src/posts/ に Markdown を置いただけで、この一覧が生えた。
+ * frontmatter は content.config.ts の schema で型チェックされ、
+ * 欠けがあればビルドで止まる。
+ *
+ * このページには <script> が1行も無い = ブラウザに届く JavaScript はゼロ。
+ * ビルド時に HTML を作り切って配るだけ。
+ * 共通デモ (/) は測定後に触っていない。こちらは測定の対象外。
+ */
+import { getCollection } from 'astro:content';
+import '../../../shared/app.css';
+
+const posts = (await getCollection('posts')).sort((a, b) =>
+	a.data.date < b.data.date ? 1 : -1,
+);
+---
+
+<html lang="ja">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>検証メモ — Astro コンテンツコレクション</title>
+	</head>
+	<body>
+		<div class="app">
+			<h1>検証メモ <span class="tag">Markdownを置いただけ・JSゼロ</span></h1>
+			<p class="summary">{posts.length} 件の記事 ／ src/posts/*.md がそのまま一覧になる</p>
+			<div class="list">
+				{
+					posts.map((p) => (
+						<div class="card">
+							<div class="card-head">
+								<span class="card-name">{p.data.title}</span>
+								<span class="card-stars">{p.data.date}</span>
+							</div>
+							<div class="card-desc">{p.data.summary}</div>
+							<div class="card-foot">
+								<span class="tag">{p.id}.md</span>
+							</div>
+						</div>
+					))
+				}
+			</div>
+		</div>
+	</body>
+</html>

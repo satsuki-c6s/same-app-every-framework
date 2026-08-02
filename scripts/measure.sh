@@ -34,6 +34,11 @@ elif [ -f nuxt.config.ts ] || [ -f nuxt.config.js ]; then
   # .output/public がブラウザに配られる側。.output/server は送られないので走査しない
   out_dir=".output/public"
   build_dirs="dist .nuxt .output"
+elif [ -f astro.config.mjs ] || [ -f astro.config.ts ]; then
+  # Astro: 成果物は dist (既定)。dev は astro CLI で --strictPort が無い
+  kind=astro
+  out_dir="dist"
+  build_dirs="dist .astro"
 elif grep -q '"@sveltejs/kit"' package.json 2>/dev/null; then
   # SvelteKit: dev は vite なので起動フラグは vite 系と同じ。成果物だけ場所が違う
   # (.svelte-kit/output/client がブラウザに配られる側。server は送られないので走査しない)
@@ -70,7 +75,7 @@ echo "js-total-gzip: ${total} B"
 # ツール自身が出す "ready in" は使わない (自己申告を測定値にしない)
 t4=$(date +%s%3N)
 case "$kind" in
-  next|nuxt) npm run dev -- --port "$port" > .dev.log 2>&1 & ;;
+  next|nuxt|astro) npm run dev -- --port "$port" > .dev.log 2>&1 & ;;
   dev)  npm run dev -- --port "$port" --strictPort > .dev.log 2>&1 & ;;
   *)    npm run "$dev_script" -- --port "$port" > .dev.log 2>&1 & ;;
 esac
