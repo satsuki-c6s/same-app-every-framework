@@ -34,6 +34,12 @@ elif [ -f nuxt.config.ts ] || [ -f nuxt.config.js ]; then
   # .output/public がブラウザに配られる側。.output/server は送られないので走査しない
   out_dir=".output/public"
   build_dirs="dist .nuxt .output"
+elif grep -q '"@sveltejs/kit"' package.json 2>/dev/null; then
+  # SvelteKit: dev は vite なので起動フラグは vite 系と同じ。成果物だけ場所が違う
+  # (.svelte-kit/output/client がブラウザに配られる側。server は送られないので走査しない)
+  kind=dev
+  out_dir=".svelte-kit/output/client"
+  build_dirs="dist .svelte-kit"
 else
   kind="$dev_script"   # dev = vite系 / start = Angular
   out_dir="dist"
