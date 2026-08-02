@@ -1,0 +1,56 @@
+<!doctype html>
+<!--
+  特徴デモ: 既存の静的 HTML への後付け (Alpine が公式に掲げる売り)。
+
+  このページは「もともとあった静的な FAQ ページ」という設定。
+  そこに x-data / @click / x-show の3種類の属性を足しただけで、
+  アコーディオン (クリックで開閉) が動くようになった。
+  ビルド無し・書き換えたのは HTML だけ — 「後付け」がそのまま伝わる形。
+-->
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>よくある質問 — Alpine.js 後付けデモ</title>
+    <link rel="stylesheet" href="/app.css" />
+    <script defer src="/alpine.min.js"></script>
+  </head>
+  <body>
+    <div class="app" x-data="{ open: 1 }">
+      <h1>よくある質問 <span class="tag">静的ページに属性を足しただけ</span></h1>
+      <p class="summary">3 件 ／ クリックで開閉 (x-data・@click・x-show の3属性で後付け)</p>
+      <div class="list">
+        <div class="card">
+          <div class="card-head" @click="open = open === 1 ? null : 1" style="cursor: pointer">
+            <span class="card-name">Q. なぜ同じアプリを何度も作るのですか?</span>
+            <span class="card-stars" x-text="open === 1 ? '−' : '+'"></span>
+          </div>
+          <div class="card-desc" x-show="open === 1">
+            条件を揃えて実測するためです。同じ機能・同じ見た目・同じマシンで測ることで、
+            数字の差がフレームワークの差になります。
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head" @click="open = open === 2 ? null : 2" style="cursor: pointer">
+            <span class="card-name">Q. 数字が良ければ良いフレームワークですか?</span>
+            <span class="card-stars" x-text="open === 2 ? '−' : '+'"></span>
+          </div>
+          <div class="card-desc" x-show="open === 2">
+            いいえ。このシリーズは勝ち負けを決めません。何と引き換えにその数字なのかを、
+            毎回セットで見ています。
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head" @click="open = open === 3 ? null : 3" style="cursor: pointer">
+            <span class="card-name">Q. 測定はなぜ1回だけなのですか?</span>
+            <span class="card-stars" x-text="open === 3 ? '−' : '+'"></span>
+          </div>
+          <div class="card-desc" x-show="open === 3">
+            何度も測って良い数字を選ぶことを避けるためです。全実装が同じ条件の
+            1回勝負なら、公平さが保てます。
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

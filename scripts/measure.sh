@@ -34,6 +34,12 @@ elif [ -f nuxt.config.ts ] || [ -f nuxt.config.js ]; then
   # .output/public がブラウザに配られる側。.output/server は送られないので走査しない
   out_dir=".output/public"
   build_dirs="dist .nuxt .output"
+elif [ -f server.mjs ] && grep -q '"alpinejs"' package.json 2>/dev/null; then
+  # Alpine: ビルド工程が無い。ブラウザに届く JS は Alpine 本体 + データ注入 (repos.js)。
+  # 配信の実物を測るため、JS 計測時だけサーバを一時起動して curl で取る
+  kind=alpine
+  out_dir=""
+  build_dirs="dist"
 elif [ -f server.mjs ] && grep -q '"htmx.org"' package.json 2>/dev/null; then
   # htmx: ビルド工程が無い。ブラウザに届く JS は配信する htmx.min.js だけ (自作 JS 0 行)。
   # dev は自前の Node サーバ (PORT 環境変数)
@@ -64,7 +70,7 @@ t1=$(date +%s%3N)
 echo "install: $((t1 - t0)) ms"
 echo "deps: $(node -e "const l=require('./package-lock.json');console.log(Object.keys(l.packages).filter(Boolean).length)") packages"
 
-if [ "$kind" = "htmx" ]; then
+if [ "$kind" = "htmx" ] || [ "$kind" = "alpine" ]; then
   echo "build: なし (ビルド工程が無い)"
 else
   t2=$(date +%s%3N)
@@ -78,6 +84,18 @@ if [ "$kind" = "htmx" ]; then
   s=$(gzip -c node_modules/htmx.org/dist/htmx.min.js | wc -c)
   echo "js: htmx.min.js  ${s} B (gzip)"
   echo "js-total-gzip: ${s} B"
+elif [ "$kind" = "alpine" ]; then
+  # 配信の実物を数える (Alpine 本体 + repos.js のデータ注入)。一時サーバは JS 計測専用で、
+  # dev の起動時間はこの後あらためて計測する
+  PORT=39999 npm run dev > /dev/null 2>&1 &
+  js_pid=$!
+  for _ in $(seq 1 50); do curl -s -o /dev/null "http://localhost:39999/" && break; sleep 0.1; done
+  s1=$(curl -s "http://localhost:39999/alpine.min.js" | gzip -c | wc -c)
+  s2=$(curl -s "http://localhost:39999/repos.js" | gzip -c | wc -c)
+  kill "$js_pid" 2> /dev/null || true
+  echo "js: alpine.min.js  ${s1} B (gzip)"
+  echo "js: repos.js (データ注入)  ${s2} B (gzip)"
+  echo "js-total-gzip: $((s1 + s2)) B"
 else
   total=0
   for f in $(find "$out_dir" -name "*.js" -not -name "*.map" | sort); do
@@ -93,7 +111,7 @@ fi
 t4=$(date +%s%3N)
 case "$kind" in
   next|nuxt|astro) npm run dev -- --port "$port" > .dev.log 2>&1 & ;;
-  htmx) PORT="$port" npm run dev > .dev.log 2>&1 & ;;
+  htmx|alpine) PORT="$port" npm run dev > .dev.log 2>&1 & ;;
   dev)  npm run dev -- --port "$port" --strictPort > .dev.log 2>&1 & ;;
   *)    npm run "$dev_script" -- --port "$port" > .dev.log 2>&1 & ;;
 esac

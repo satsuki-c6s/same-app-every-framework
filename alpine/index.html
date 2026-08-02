@@ -1,0 +1,77 @@
+<!doctype html>
+<!--
+  OSSリポジトリ ミニ検索 — Alpine.js 版。
+
+  ビルドも雛形も無い。script タグで Alpine を読み込み、HTML の属性に
+  状態 (x-data)・双方向バインド (x-model)・繰り返し (x-for)・イベント (@click) を書く。
+  「JavaScript を書かない」のではなく「JavaScript を HTML の中に書く」— それが Alpine。
+  別ファイルの自作 JS は 0 (repos.js はデータ注入のみ)。
+-->
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSS リポジトリ検索 — Alpine.js</title>
+    <link rel="stylesheet" href="/app.css" />
+    <script src="/repos.js"></script>
+    <script defer src="/alpine.min.js"></script>
+  </head>
+  <body>
+    <div
+      class="app"
+      x-data="{
+        q: '',
+        lang: 'All',
+        favs: [],
+        langs: ['All', ...new Set(REPOS.map((r) => r.language))],
+        get shown() {
+          const s = this.q.trim().toLowerCase();
+          return REPOS.filter(
+            (r) =>
+              (s === '' ||
+                r.fullName.toLowerCase().includes(s) ||
+                r.description.toLowerCase().includes(s)) &&
+              (this.lang === 'All' || r.language === this.lang),
+          );
+        },
+        toggle(n) {
+          this.favs.includes(n) ? (this.favs = this.favs.filter((x) => x !== n)) : this.favs.push(n);
+        },
+      }"
+    >
+      <h1>OSS リポジトリ検索</h1>
+      <input class="search" type="search" placeholder="リポジトリ名・説明で検索" x-model="q" />
+      <div class="filters">
+        <template x-for="l in langs" :key="l">
+          <button type="button" :class="{ active: l === lang }" @click="lang = l" x-text="l"></button>
+        </template>
+      </div>
+      <p class="summary" x-text="`${REPOS.length} 件中 ${shown.length} 件を表示 ／ ★ ${favs.length}`"></p>
+      <div class="list">
+        <template x-for="r in shown" :key="r.fullName">
+          <div class="card">
+            <div class="card-head">
+              <span class="card-name" x-text="r.fullName"></span>
+              <span class="card-stars" x-text="`★ ${r.stars.toLocaleString('en-US')}`"></span>
+            </div>
+            <div class="card-desc" x-text="r.description"></div>
+            <div class="card-foot">
+              <span class="tag" x-text="r.language"></span>
+              <button
+                type="button"
+                class="fav"
+                :class="{ on: favs.includes(r.fullName) }"
+                @click="toggle(r.fullName)"
+              >
+                ★ お気に入り
+              </button>
+            </div>
+          </div>
+        </template>
+        <template x-if="shown.length === 0">
+          <p class="empty">該当するリポジトリがありません</p>
+        </template>
+      </div>
+    </div>
+  </body>
+</html>
