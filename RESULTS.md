@@ -378,3 +378,33 @@
 - dev 画面右下の Click-to-Source バッジは `qwikVite({ devTools: { clickToSource: false } })`
   で消した (見た目当てクイズ保護)
 - Qwik のライセンスは MIT (package.json license フィールドで確認)
+
+### preact (Preact 10 / vite preact-ts テンプレート) — 測定日 2026-08-02
+
+| 指標 | 値 | Solid | Svelte | Vue 3 | 基準値 (素のTS) |
+|---|---|---|---|---|---|
+| install (キャッシュ温) | 1,533 ms ※ | 1,671 | 1,268 | 2,036 | 1,031 |
+| 依存パッケージ数 | 120 | 140 | 78 | 179 | 45 |
+| 本番ビルド | 1,669 ms ※ | 1,749 | 1,180 | 1,839 | 1,491 |
+| **JS 転送量 (gzip)** | **7,763 B** | 6,284 | 15,502 | 26,345 | 2,479 |
+| dev サーバ起動 → HTTP 200 | 1,099 ms | 1,679 | 1,701 | 1,146 | 1,177 |
+| 公式スキャフォールドの行数 | 550 行 | 165 | 499 | 573 | 417 |
+| 共通デモの実装行数 | 118 行 | 137 | 100 | 102 | 120 |
+
+備考:
+
+- ※ **1回目の測定は build 段で失敗し中断** — 特徴デモ用の React 構文ファイルが
+  `tsc -b` の型検査を壊していた (alias は Vite 設定のみで TS が知らなかった)。
+  tsconfig の paths を直して再実行した値。1回目に観測できたのは install 1,575ms /
+  deps 120 のみで、再実行値 (1,533ms) とほぼ一致している
+- **React と同じ API・同じ動作原理 (仮想DOM・再レンダリング) で 7.8KB**。
+  仮想DOMを捨てた Solid (6.3KB) に迫る軽さを、React 互換のまま実現している。
+  なお React 本体の回はこのシリーズに無い — その代わりが今回で、書き味は完全に React
+- 実装 118 行は素のTS実装 (120行) とほぼ同じ。useState / useMemo / JSX の標準形
+- スキャフォールドは `npm create vite@latest preact -- --template preact-ts`。
+  雛形 550 行 (デモ用画像・CSS込み)
+- 特徴デモ (`specialty.html` + `src/react-app.tsx`、React互換) は**測定後に追加**の別エントリ
+  …ではなく**測定前に存在**し、1回目の build を壊した張本人 (上記※)。
+  vite.config の alias (react→preact/compat) で、**react をインストールしていないのに**
+  'react' から import するコードがそのまま完全動作することを確認済み (検索・絞り込み・★全部)
+- Preact のライセンスは MIT (package.json / GitHub API 双方で確認)
