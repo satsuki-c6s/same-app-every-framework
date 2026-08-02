@@ -34,6 +34,12 @@ elif [ -f nuxt.config.ts ] || [ -f nuxt.config.js ]; then
   # .output/public がブラウザに配られる側。.output/server は送られないので走査しない
   out_dir=".output/public"
   build_dirs="dist .nuxt .output"
+elif [ -f server.mjs ] && grep -q '"htmx.org"' package.json 2>/dev/null; then
+  # htmx: ビルド工程が無い。ブラウザに届く JS は配信する htmx.min.js だけ (自作 JS 0 行)。
+  # dev は自前の Node サーバ (PORT 環境変数)
+  kind=htmx
+  out_dir=""
+  build_dirs="dist"
 elif [ -f astro.config.mjs ] || [ -f astro.config.ts ]; then
   # Astro: 成果物は dist (既定)。dev は astro CLI で --strictPort が無い
   kind=astro
@@ -58,24 +64,36 @@ t1=$(date +%s%3N)
 echo "install: $((t1 - t0)) ms"
 echo "deps: $(node -e "const l=require('./package-lock.json');console.log(Object.keys(l.packages).filter(Boolean).length)") packages"
 
-t2=$(date +%s%3N)
-npm run build > /dev/null 2>&1
-t3=$(date +%s%3N)
-echo "build: $((t3 - t2)) ms"
+if [ "$kind" = "htmx" ]; then
+  echo "build: なし (ビルド工程が無い)"
+else
+  t2=$(date +%s%3N)
+  npm run build > /dev/null 2>&1
+  t3=$(date +%s%3N)
+  echo "build: $((t3 - t2)) ms"
+fi
 
-total=0
-for f in $(find "$out_dir" -name "*.js" -not -name "*.map" | sort); do
-  s=$(gzip -c "$f" | wc -c)
-  echo "js: $(basename "$f")  ${s} B (gzip)"
-  total=$((total + s))
-done
-echo "js-total-gzip: ${total} B"
+if [ "$kind" = "htmx" ]; then
+  # ブラウザに届く JS = 配信する htmx 本体だけ (自作 JS は 0 行)
+  s=$(gzip -c node_modules/htmx.org/dist/htmx.min.js | wc -c)
+  echo "js: htmx.min.js  ${s} B (gzip)"
+  echo "js-total-gzip: ${s} B"
+else
+  total=0
+  for f in $(find "$out_dir" -name "*.js" -not -name "*.map" | sort); do
+    s=$(gzip -c "$f" | wc -c)
+    echo "js: $(basename "$f")  ${s} B (gzip)"
+    total=$((total + s))
+  done
+  echo "js-total-gzip: ${total} B"
+fi
 
 # dev サーバ: 起動コマンドを打ってから HTTP 200 が返るまでの壁時計。
 # ツール自身が出す "ready in" は使わない (自己申告を測定値にしない)
 t4=$(date +%s%3N)
 case "$kind" in
   next|nuxt|astro) npm run dev -- --port "$port" > .dev.log 2>&1 & ;;
+  htmx) PORT="$port" npm run dev > .dev.log 2>&1 & ;;
   dev)  npm run dev -- --port "$port" --strictPort > .dev.log 2>&1 & ;;
   *)    npm run "$dev_script" -- --port "$port" > .dev.log 2>&1 & ;;
 esac

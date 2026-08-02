@@ -1,0 +1,12 @@
+{
+  "name": "htmx",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs"
+  },
+  "dependencies": {
+    "htmx.org": "^2.0.8"
+  }
+}
