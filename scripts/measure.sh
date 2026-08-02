@@ -22,12 +22,18 @@ echo "== $dir  $(date +%F)  node $(node --version)"
 # 測る中身 (ブラウザに送られる JS の gzip 合計 / dev 起動から HTTP 200 まで) は変えない。
 #   vite系   : dist          / npm run dev -- --port N --strictPort
 #   Angular  : dist          / npm run start -- --port N
-#   Next.js  : .next/static  / npm run dev -- --port N   (--strictPort は Next に無いフラグ)
+#   Next.js  : .next/static     / npm run dev -- --port N  (--strictPort は Next に無いフラグ)
+#   Nuxt     : .output/public   / npm run dev -- --port N
 # .next/server はブラウザに送られないので走査しない (足すと数倍に膨らむ)
 if [ -f next.config.ts ] || [ -f next.config.js ] || [ -f next.config.mjs ]; then
   kind=next
   out_dir=".next/static"
   build_dirs="dist .next"
+elif [ -f nuxt.config.ts ] || [ -f nuxt.config.js ]; then
+  kind=nuxt
+  # .output/public がブラウザに配られる側。.output/server は送られないので走査しない
+  out_dir=".output/public"
+  build_dirs="dist .nuxt .output"
 else
   kind="$dev_script"   # dev = vite系 / start = Angular
   out_dir="dist"
@@ -58,7 +64,7 @@ echo "js-total-gzip: ${total} B"
 # ツール自身が出す "ready in" は使わない (自己申告を測定値にしない)
 t4=$(date +%s%3N)
 case "$kind" in
-  next) npm run dev -- --port "$port" > .dev.log 2>&1 & ;;
+  next|nuxt) npm run dev -- --port "$port" > .dev.log 2>&1 & ;;
   dev)  npm run dev -- --port "$port" --strictPort > .dev.log 2>&1 & ;;
   *)    npm run "$dev_script" -- --port "$port" > .dev.log 2>&1 & ;;
 esac
