@@ -1,0 +1,19 @@
+<!doctype html>
+<!-- 特徴デモ用の別エントリ (ビルドには含めない。dev サーバでだけ開く) -->
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>細粒度更新 — Solid</title>
+    <style>
+      .cellgrid { display: grid; grid-template-columns: repeat(20, 1fr); gap: 4px; margin-top: 16px; }
+      .cell { text-align: center; padding: 6px 0; border-radius: 6px; background: #161b22;
+        border: 1px solid #21262d; color: #484f58; font-size: 14px; min-height: 30px; }
+      .cell.live { background: #1f6feb; color: #fff; border-color: #58a6ff; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="/src/specialty.tsx" type="module"></script>
+  </body>
+</html>
